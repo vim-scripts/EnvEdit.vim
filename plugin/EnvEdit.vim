@@ -1,7 +1,7 @@
 " File:         EnvEdit.vim
 " Last Changed: 2007-12-17
-" Maintainer:   Erik Falor <efalor@gmail.com>
-" Version:      0.1
+" Maintainer:   Erik Falor <ewfalor@gmail.com>
+" Version:      0.2
 " License:      The However License - use this software however you like.
 "
 " Motivation:   Changing environment variables in Windows' "Environment
@@ -27,10 +27,10 @@
 "               environment variable, you'll be greeted with an empty buffer.
 "
 "               When the buffer is saved, the new text is stored in the
-"               default register "", exported to the clipboard via the "+
-"               register, and exported to Vim's own environment.  This means
-"               that any child processes of that instance of Vim inherit the
-"               new environment variable.
+"               default register "", exported to the clipboard via the "+ and
+"               * registers register, and exported to Vim's own environment.
+"               This means that any child processes of that instance of Vim
+"               inherit the new environment variable.
 "
 "               If the environment variable contains your system's path
 "               separator character (':' on UNIX and ';' on Windows), the
@@ -39,6 +39,12 @@
 "               lines are joined and delimited by this same character.  Empty
 "               lines are filtered out to prevent consecutive path separators
 "               from appearing.
+
+"Changes {{{
+"2007-12-17 Version 0.2: Push value into "*, X's selection buffer.
+"
+"2007-12-17 Version 0.1: Initial Upload
+"}}}
 
 " Load plugin once {{{
 if exists('loaded_EnvEdit') || v:version < 700
@@ -108,6 +114,7 @@ function! WriteEnvVar() "{{{
     let valueS = join( filter( getline(1, '$'), "v:val !~ '^\s*$'") , s:pathsep)
     call setreg('+', valueS, 'l')
     call setreg('"', valueS, 'l')
+    call setreg('*', valueS, 'l')
     exe "let $" . b:EnvVarName . " = valueS"
     redraw | echom "Exported value of $" . b:EnvVarName . " to clipboard"
 endfunction "}}}
