@@ -1,7 +1,7 @@
 " File:         EnvEdit.vim
-" Last Changed: 2007-12-17
+" Last Changed: 2014-12-22
 " Maintainer:   Erik Falor <ewfalor@gmail.com>
-" Version:      0.2
+" Version:      0.3
 " License:      The However License - use this software however you like.
 "
 " Motivation:   Changing environment variables in Windows' "Environment
@@ -41,6 +41,8 @@
 "               from appearing.
 
 "Changes {{{
+"2014-12-22 Version 0.3: Substitute %SystemRoot% in the expansion of %PATH% on Windows
+"
 "2007-12-17 Version 0.2: Push value into "*, X's selection buffer.
 "
 "2007-12-17 Version 0.1: Initial Upload
@@ -101,14 +103,25 @@ function! OpenEnvVar(var, ...) "{{{
     au BufWriteCmd <buffer> call WriteEnvVar()
 endfunction "}}}
 
+"" read an environment variable and massage it as appropriate
 function! ReadEnvVar(var) "{{{
-    exe "let value = $" . a:var
-    "split if it contains ;'s
-    let valueL = split(value, s:pathsep, 1)
-    call append(0, valueL)
-    normal 0G
+    exe "let l:value = $" . a:var
+
+    "split the string on ;'s
+    let l:valueLst = split(l:value, s:pathsep, 1)
+
+    if has("win32") && a:var ==? 'PATH'
+        " On Windows, replace the expansion of the $SystemRoot variable with its symbolic name
+        " in each component of the $PATH variable
+        let l:sysroot = escape($SystemRoot, '\')
+        let l:valueLst = map(l:valueLst, 'substitute(v:val, l:sysroot, "%SystemRoot%", "")')
+    endif
+
+    call append(0, l:valueLst)
+    normal dd1G
 endfunction "}}}
 
+"" copy the environment variable's value onto the clipboard
 function! WriteEnvVar() "{{{
     setl nomodified
     let valueS = join( filter( getline(1, '$'), "v:val !~ '^\s*$'") , s:pathsep)
